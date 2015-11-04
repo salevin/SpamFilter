@@ -1,6 +1,7 @@
-import nltk
 import os
 import random
+
+import nltk
 from nltk.corpus import stopwords
 
 stopwords = nltk.corpus.stopwords.words('english')  # irrelevant little english words

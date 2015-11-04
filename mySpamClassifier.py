@@ -110,7 +110,7 @@ class mySpamClassifier:
                 else:
                     hnum += num
 
-            hPerc = hnum / len(self.totalHamWords)
+            hPerc = hnum / (len(self.totalHamWords))
             sPerc = snum / len(self.totalSpamWords)
             hPerc = .1 if hPerc == 0 else hPerc
             sPerc = .1 if sPerc == 0 else sPerc
@@ -122,6 +122,7 @@ class mySpamClassifier:
             spamChance = 0
             for word in self.word_features:
                 if word in doc[0]:
+                    # TODO: Fix this ...
                     spamChance += (self.spamWord[word] * self.spamChance) / (
                         (self.spamWord[word] * self.spamChance) + (self.hamWord[word] * self.hamChance))
             spamChance /= len(self.word_features)

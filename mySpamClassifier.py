@@ -9,6 +9,22 @@
 # Each feature contributes to the prior probability to get a likelihood estimate foe each label.
 # The label with the highest likelihood estimate is assigned to the input value, 
 # e.g. 39% estimate for spam, 61% estimate for ham, file is assigned "ham".
+
+#        \`*-.
+#         )  _`-.
+#        .  : `. .
+#        : _   '  \
+#        ; *` _.   `*-._
+#        `-.-'          `-.
+#          ;       `       `.
+#          :.       .        \
+#          . \  .   :   .-'   .
+#          '  `+.;  ;  '      :
+#          :  '  |    ;       ;-.
+#          ; '   : :`-:     _.`* ;
+# [bug] .*' /  .*' ; .*`- +'  `*'
+#       `*-*   `*-*  `*-*'
+
 import os
 import random
 import time
@@ -88,21 +104,32 @@ class mySpamClassifier:
     def train(self):  # trains the classifier by calculating probabilities
         print("Starting to train")
         numSpam = 0
+        # Get probability of any random document being spam
         for doc in self.trainDocs:
             if doc[1] == "spam":
                 numSpam += 1
-        self.spamChance = numSpam / len(self.trainDocs)
+        self.spamChance = float(numSpam) / len(self.trainDocs)
+        # Ham chance is just the inverse of the spam chance
         self.hamChance = 1 - self.spamChance
 
+        # Start the real training
         for i in range(len(self.word_features)):
+
+            # Read out how far along training is
             percDone = (i / float(len(self.word_features))) * 100
             if percDone % 10 <= .01:
                 print("%s%% done" % percDone)
+
+            # Look at each word in the featured words
             word = self.word_features[i]
-            self.spamWord.setdefault(word, 0)
-            self.hamWord.setdefault(word, 0)
+            self.spamWord.setdefault(word, .000000000001)
+            self.hamWord.setdefault(word, .000000000001)
+
+            # Initialize number of spam and ham occurrences to zero
             hnum = 0
             snum = 0
+
+            # Add up occurrences
             for doc in self.trainDocs:
                 num = doc[0].count(word)
                 if doc[1] == "spam":
@@ -110,35 +137,50 @@ class mySpamClassifier:
                 else:
                     hnum += num
 
-            hPerc = hnum / (len(self.totalHamWords))
-            sPerc = snum / len(self.totalSpamWords)
-            hPerc = .1 if hPerc == 0 else hPerc
-            sPerc = .1 if sPerc == 0 else sPerc
-            self.spamWord[word] = hPerc
-            self.hamWord[word] = sPerc
+            # Get the percentage value
+            hPerc = float(hnum) / len(self.totalHamWords)
+            sPerc = float(snum) / len(self.totalSpamWords)
+
+            # Make sure we aren't setting them to zero
+            if hPerc != 0:
+                self.spamWord[word] = hPerc
+            if sPerc != 0:
+                self.hamWord[word] = sPerc
 
     def classify(self):  # labels test docs as spam or ham based on feature probs.
-        for doc in self.trainDocs:
-            spamChance = 0
+        for doc in self.testDocs:
+            wordProbs = []
             for word in self.word_features:
                 if word in doc[0]:
-                    # TODO: Fix this ...
-                    spamChance += (self.spamWord[word] * self.spamChance) / (
-                        (self.spamWord[word] * self.spamChance) + (self.hamWord[word] * self.hamChance))
-            spamChance /= len(self.word_features)
-            if spamChance >= .5:
-                self.classifiedList.append((doc[0], "spam"))
-            else:
+                    wordProbs.append((self.spamWord[word] * self.spamChance) / (
+                        (self.spamWord[word] * self.spamChance) + (self.hamWord[word] * self.hamChance)))
+
+            invProbs = [1 - a for a in wordProbs]
+
+            if not wordProbs:
                 self.classifiedList.append((doc[0], "ham"))
-        return self.classifiedList
+            else:
+                multProbs = 1
+                for i in wordProbs:
+                    multProbs *= i
+                multInv = 1
+                for i in invProbs:
+                    multInv *= i
+
+                spamChance = multProbs / (multProbs + multInv)
+
+                if spamChance >= .5:
+                    self.classifiedList.append((doc[0], "spam"))
+                else:
+                    self.classifiedList.append((doc[0], "ham"))
 
     def accuracy(self):  # calculates percent of docs that were correctly classified
         result = 0
-        for i in range(len(self.trainDocs)):
+        for i in range(len(self.testDocs)):
             doc = self.trainDocs[i]
             if self.classifiedList[i][1] == doc[1]:
                 result += 1
-        result /= float(len(self.trainDocs))
+        result /= float(len(self.testDocs))
         return result
 
 
@@ -147,6 +189,7 @@ if __name__ == '__main__':
     start = time.time()
     c.train()
     end = time.time()
+    print("Done training")
     c.classify()
     print("Accuracy is %s%%" % (c.accuracy() * 100))
     print("Took %s seconds to train" % int(end - start))

@@ -182,5 +182,8 @@ if __name__ == '__main__':
     end = time.time()
     print("Done training")
     c.classify()
-    print("Accuracy is %s%%" % (c.accuracy() * 100))
+    accuracy = c.accuracy() * 100
+    print("Accuracy is %s%%" % accuracy)
+    if accuracy > 80:
+        print("doot doot you win")
     print("Took %s seconds to train" % int(end - start))

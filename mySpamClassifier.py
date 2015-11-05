@@ -122,8 +122,8 @@ class mySpamClassifier:
 
             # Look at each word in the featured words
             word = self.word_features[i]
-            self.spamWord.setdefault(word, .000000000001)
-            self.hamWord.setdefault(word, .000000000001)
+            self.spamWord.setdefault(word, (1.0 / (len(self.totalSpamWords) - numSpam)))
+            self.hamWord.setdefault(word, (1.0 / numSpam))
 
             # Initialize number of spam and ham occurrences to zero
             hnum = 0
@@ -131,15 +131,15 @@ class mySpamClassifier:
 
             # Add up occurrences
             for doc in self.trainDocs:
-                num = doc[0].count(word)
-                if doc[1] == "spam":
-                    snum += num
-                else:
-                    hnum += num
+                if word in doc[0]:
+                    if doc[1] == "spam":
+                        snum += 1
+                    else:
+                        hnum += 1
 
             # Get the percentage value
-            hPerc = float(hnum) / len(self.totalHamWords)
-            sPerc = float(snum) / len(self.totalSpamWords)
+            hPerc = float(hnum) / (len(self.totalSpamWords) - numSpam)
+            sPerc = float(snum) / numSpam
 
             # Make sure we aren't setting them to zero
             if hPerc != 0:
@@ -171,14 +171,17 @@ class mySpamClassifier:
 
                 if spamChance >= .5:
                     self.classifiedList.append((doc[0], "spam"))
+                    print("wowo")
                 else:
                     self.classifiedList.append((doc[0], "ham"))
 
     def accuracy(self):  # calculates percent of docs that were correctly classified
         result = 0
         for i in range(len(self.testDocs)):
-            doc = self.trainDocs[i]
+            doc = self.testDocs[i]
             if self.classifiedList[i][1] == doc[1]:
+                if doc[1] == "spam":
+                    print("wowo")
                 result += 1
         result /= float(len(self.testDocs))
         return result
